@@ -1,0 +1,78 @@
+#ifndef DORCA30_API
+#define DORCA30_API
+#include <stdint.h>
+#define LAST 1
+#define NULL 0
+typedef unsigned int size_t; 
+typedef enum
+{
+	MODE_ECB = 0,
+	MODE_CBC,
+	MODE_OFB,
+	MODE_CTR,
+	MODE_CFB
+}RG_AES_OPMODE;
+	
+typedef enum
+{
+	RG_256 = 0,
+	RG_128
+}RG_MODE;
+typedef enum
+{
+	RG_ARIA = 0,
+	RG_AES
+}RG_ALGO;
+typedef enum
+{
+	RG_ENC = 0,
+	RG_DEC
+}RG_ENCDEC;
+
+
+typedef enum{
+	MODE256 = 1,
+	MODE128 = 0
+}KEY_SAVE_MODE;
+
+typedef struct _point
+{
+uint8_t x[32];
+uint8_t y[32];
+}point;
+
+#define	AES128 3
+#define AES256 1
+#define	ARIA128 2
+#define ARIA256 0
+
+#if 1
+int dorca3_cipher_decipher(int mode, int arg_type, unsigned char* Key, int key_length, unsigned char *iv, unsigned char *out, unsigned char *in, size_t len, int type,int last);
+#endif
+int dorca3_cipher_decipher_given_idx(int key_idx, int mode, int arg_type, unsigned char* Key, int key_length, unsigned char *iv, unsigned char *out, unsigned char *in, size_t len, int type,int last);
+void eeprom_read(unsigned char *Key,int SubFrame,int SubPage,int Page, int Algorithm,unsigned char *CT) ;
+void eeprom_write(unsigned char *Key, int SubFrame,int SubPage,int Page, int Algorithm,unsigned char *CT);
+int ecdsa_verify_signature(point *public_key, uint8_t *r,uint8_t *s,uint8_t *h);
+int ecdsa_gen_public_key(unsigned char *private_key, point *public_key);
+int ecdsa_gen_signature(uint8_t *d, uint8_t *k, uint8_t *h, uint8_t *r, uint8_t *s);
+int rsa_pub_enc_2048(unsigned char * pub_key_n,unsigned char * pub_key_e,unsigned char * out, unsigned char *in, size_t len,int padding);
+int rsa_pub_dec_2048(unsigned char * priv_key,unsigned char * pub_key_n,unsigned char * out, unsigned char *in, size_t len,int padding);
+int _ecdh_gen_pub_key(uint8_t* sk,point *p1);
+int _ecdh_gen_session_key(uint8_t* sk,point *p1, uint8_t *key,size_t* key_length);
+int ecdh_gen_pub_key(uint8_t* sk,point *p1);
+int ecdh_gen_session_key(uint8_t* sk,point *p1, uint8_t *key,size_t* key_length);
+void CipherMemTest();
+unsigned char STANDARD_SHA_MODE(unsigned char *txdata, unsigned char *rxdata, long long ByteNo);
+void RSSHAReadIdx(int index, unsigned char *out);
+void RSCreate34(unsigned char *pUservalue32A,unsigned char *pUservalue32B);
+void RSCreate12(void);
+void KeyCreatXn(int index,int mode,unsigned char *prevKey,unsigned char *key);
+void key_from_ecdh(void);
+void RSDirectRead13(unsigned char *pRS, int index,unsigned char *UID_PW_PT);
+void GetRandomNumber(unsigned char *pOut);
+
+//#define DEBUG_API
+
+
+
+#endif //DORCA30_API

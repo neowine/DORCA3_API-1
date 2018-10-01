@@ -1,0 +1,15 @@
+[Compile C] Entry.c 
+[Compile C] function/dorca.c
+[Compile C] function/test_main.c
+[Compile C] function/core_funtion.c
+[Compile C] function/api_fuction.c
+[Compile C] function/aes_core.c
+[Compile C] function/aes_ecb.c
+[Compile C] function/aes_misc.c
+[Compile C] function/cipher_memory.c
+[Compile C] function/register.c
+[Compile C] function/rsa_ecc_rand.c
+[Compile C] function/sha.c
+[Compile C] function/rootSerial.c
+[Compile C] function/permission.c
+cc -g   -o test Entry.o function/dorca.o function/test_main.o function/core_funtion.o function/api_fuction.o function/aes_core.o function/aes_ecb.o function/aes_misc.o function/cipher_memory.o function/register.o function/rsa_ecc_rand.o function/sha.o function/rootSerial.o function/permission.o -lbcm2835  

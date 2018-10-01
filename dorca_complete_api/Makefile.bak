@@ -1,0 +1,14 @@
+SRCS =  Entry.c  ./function/dorca.c ./function/test_main.c ./function/core_funtion.c ./function/api_fuction.c \
+./function/aes_core.c ./function/aes_ecb.c ./function/aes_misc.c ./function/cipher_memory ./function/register.c 
+OBJS = $(SRCS:.c=.o)
+CFLAGS = -w -g 
+all: test
+test: $(OBJS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ -lbcm2835 -nostartfiles	
+.c.o: 
+	@echo [Compile C] $^
+	@$(CC)  -o -c $@ $^ $(CFLAGS)
+clean:
+	rm -rf *.o test
+	cd function && rm -rf *.o
+	

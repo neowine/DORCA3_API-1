@@ -1,0 +1,546 @@
+#include "dorca30_api.h"
+#include "dorca30_api_inside.h"
+#include "dorca30_function.h"
+#include "global.h"
+#include "./include/aes.h"
+#include <stdio.h>
+int g_ErrorCnt = 0;
+int GetPermissionByPW(unsigned char * SUPER_PW_CT, int TYPE)
+{
+	int i;
+	int result = 1;
+	unsigned int inst = 0;
+	int PERM_TYPE = 0;
+	//unsigned char addr[2];
+	unsigned char tx_data[64];
+	unsigned char rx_data[64];
+	int j = 0;
+	unsigned char temp_addr[2];
+	int k = 0;
+	int success = 0;
+	for(i = 0; i < 64; i++)
+	{
+		tx_data[i] = 0;
+		rx_data[i] = 0;
+	}
+	
+	//SetKEYNormal();
+	//printf("\r\n SetKeyNormal Write 0x11");
+#if PRINTFMODE_PERMISSION
+	PRINTLOG("\r\n\n");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+	PRINTLOG("\r\n==       PERMISSION   TEST                                    ==");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+#endif 
+#if PRINTFMODE_PERMISSION
+	PRINTLOG("\r\n\n");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+	PRINTLOG("\r\n==       SET  RG_EE_KEY_AES_CTRL AS 0                                    ==");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+#endif 	
+	tx_data[0] = 1;
+	tspi_interface(cs, ADDR_NOR_W, RG_EE_KEY_AES_CTRL , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);
+
+#if PRINTFMODE_PERMISSION
+	PRINTLOG("\r\n\n");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+	PRINTLOG("\r\n==       SET  RG_AES_CTRL AS 0x3                                   ==");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+#endif 	
+	tx_data[0] = 0x03;	
+	tspi_interface(cs, ADDR_NOR_W, RG_AES_CTRL , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);
+
+#if PRINTFMODE_PERMISSION
+	PRINTLOG("\r\n\n");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+	PRINTLOG("\r\n==       SET  RG_PERM_GET_CTRL AS 0                                   ==");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+#endif 	
+	tx_data[0] = TYPE;	
+	tspi_interface(cs, ADDR_NOR_W, RG_PERM_GET_CTRL , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);	
+
+#if PRINTFMODE_PERMISSION
+	PRINTLOG("\r\n\n");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+	PRINTLOG("\r\n==       SET  RG_ST0_OPMODE AS 0x0C                                   ==");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+#endif 	
+	tx_data[0] = 0x0C;	
+	tspi_interface(cs, ADDR_NOR_W, RG_ST0_OPMODE , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);		
+	tx_data[0] = 0x00;	
+	tspi_interface(cs, ADDR_NOR_W, RG_PERM_GET_EE_RD_PRE_SP , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);		
+	delay_ms(16);
+#if PRINTFMODE_PERMISSION
+	PRINTLOG("\r\n\n");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+	PRINTLOG("\r\n==       Delay 16MS                                   ==");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+#endif 		
+
+
+#if PRINTFMODE_PERMISSION
+	PRINTLOG("\r\n\n");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+	PRINTLOG("\r\n==       SET  RG_ST2_SYMCIP_OPMODE AS 0x03                                  ==");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+#endif 	
+	tx_data[0] = 0x03;	
+	tspi_interface(cs, ADDR_NOR_W, RG_ST2_SYMCIP_OPMODE , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);	
+#if PRINTFMODE_PERMISSION
+	PRINTLOG("\r\n\n");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+	PRINTLOG("\r\n==       Delay 30US                                   ==");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+#endif 		
+	delay_us(30);
+
+#if PRINTFMODE_PERMISSION
+	PRINTLOG("\r\n\n");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+	PRINTLOG("\r\n==       SET  RG_ST2_SYMCIP_OPMODE AS 0x01                                  ==");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+#endif 	
+	tx_data[0] = 0x01;	
+	tspi_interface(cs, ADDR_NOR_W, RG_ST2_SYMCIP_OPMODE , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);	
+
+#if PRINTFMODE_PERMISSION
+	PRINTLOG("\r\n\n");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+	PRINTLOG("\r\n==       SET  RG_ST2_SYMCIP_OPMODE AS 0x04                                  ==");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+#endif 	
+	tx_data[0] = 0x04;	
+	tspi_interface(cs, ADDR_NOR_W, RG_ST2_SYMCIP_OPMODE , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);	
+
+	j = 15;
+	for(i = 0 ; i < 16; i++)
+	{
+		tx_data[i] = SUPER_PW_CT[j--];	
+
+	}
+	PRINTLOG("\r\n !!!!!!! PASS WD  !!!!!!!");
+	printbyte(tx_data,16);
+#if PRINTFMODE_PERMISSION
+	PRINTLOG("\r\n\n");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+	PRINTLOG("\r\n==       SET  RG_EEBUF400 BY CIPHER TEXT                                  ==");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+#endif 		
+	tspi_interface(cs, ADDR_NOR_W, RG_EEBUF400 , NULL, NULL, NULL, NULL, tx_data, rx_data, 16);	
+
+#if PRINTFMODE_PERMISSION
+	PRINTLOG("\r\n\n");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+	PRINTLOG("\r\n==       SET  RG_ST2_SYMCIP_OPMODE AS 0x01                                  ==");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+#endif 	
+	tx_data[0] = 0x01;	
+	tspi_interface(cs, ADDR_NOR_W, RG_ST2_SYMCIP_OPMODE , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);	
+#if PRINTFMODE_PERMISSION
+	PRINTLOG("\r\n\n");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+	PRINTLOG("\r\n==       wait 16MS                                  ==");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+#endif 	
+	delay_ms(16);
+
+#if PRINTFMODE_PERMISSION
+	PRINTLOG("\r\n\n");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+	PRINTLOG("\r\n==       READ RG_PERM_GET_CTRL1                             ==");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+#endif 	
+	rx_data[0] = 0;	
+	tspi_interface(cs, ADDR_NOR_R, RG_PERM_GET_CTRL1 , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);		
+	PRINTLOG("\r\n");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+	//  PRINTLOG("PERM_TYPE %d",TYPE);
+	switch (TYPE) 
+	{
+
+	case RG_PERM_SUPER_PASS:
+		PERM_TYPE = 1 << 5;
+		temp_addr[0] = ADDR_SUPER_PW_CNT[0];
+		temp_addr[1] = ADDR_SUPER_PW_CNT[1];
+		if( (rx_data[0] & PERM_TYPE) == 0)
+		{
+			result = 0;
+#if TEST_COUNT_ON 	
+			PRINTLOG("\r\nMISS TO GET SUPER_PERMISSION");
+#endif
+		}
+		else{
+#if TEST_COUNT_ON  	
+			PRINTLOG("\r\n**HIT TO GET SUPER_PERMISSION");
+			PRINTLOG("\r\n rx_data %02x  %02x",rx_data[0],PERM_TYPE);
+#endif
+		}
+		break;
+	case RG_PERM_DETOUR_PASS:
+		PERM_TYPE = 1 << 4;
+		temp_addr[0] = ADDR_DETOUR_PW_CNT[0];
+		temp_addr[1] = ADDR_DETOUR_PW_CNT[1];
+		if( (rx_data[0] & PERM_TYPE) == 0)
+		{
+			result = 0;
+#if TEST_COUNT_ON			
+			PRINTLOG("\r\nMISS TO GET DETOUR_PERMISSION");
+#endif
+		}
+		else
+		{
+#if TEST_COUNT_ON	       
+			PRINTLOG("\r\nHIT TO GET DETOUR_PERMISSION");
+#endif
+		}
+
+		break;
+
+	case RG_PERM_DESTORY0_PASS:
+		PERM_TYPE = 1 << 3;
+		temp_addr[0] = ADDR_DESTORY0_PW_CNT[0];
+		temp_addr[1] = ADDR_DESTORY0_PW_CNT[1];
+		if( (rx_data[0] & PERM_TYPE) == 0)
+		{
+			result = 0;
+#if TEST_COUNT_ON			
+			PRINTLOG("\r\nMISS TO GET DESTORY0_PERMISSION");
+#endif		
+		}
+		else
+		{
+#if TEST_COUNT_ON	       
+			PRINTLOG("\r\nHIT TO GET DESTORY0_PERMISSION");
+#endif
+		}
+
+		break;
+
+
+	case RG_PERM_DESTORY1_PASS:
+		PERM_TYPE = 1 << 2;		
+		temp_addr[0] = ADDR_DESTORY1_PW_CNT[0];
+		temp_addr[1] = ADDR_DESTORY1_PW_CNT[1];
+		if( (rx_data[0] & PERM_TYPE) == 0)
+		{
+			result = 0;
+#if TEST_COUNT_ON			
+			PRINTLOG("\r\nMISS TO GET DESTORY1_PERMISSION");
+#endif
+		}
+		else
+		{
+#if TEST_COUNT_ON	       
+			PRINTLOG("\r\nHIT TO GET DESTORY1_PERMISSION");
+#endif
+		}
+
+		break;
+
+	case RG_PERM_EEPROM_PASS:
+		PERM_TYPE = 1 << 1;				
+		temp_addr[0] = ADDR_EEPROM_PW_CNT[0];
+		temp_addr[1] = ADDR_EEPROM_PW_CNT[1];
+		if( (rx_data[0] & PERM_TYPE) == 0)
+		{
+			result = 0;
+#if TEST_COUNT_ON			
+			PRINTLOG("\r\nMISS TO GET EEPROM_PERMISSION");
+#endif
+		}
+		else
+		{
+#if TEST_COUNT_ON	       
+			PRINTLOG("\r\nHIT TO GET EEPROM_PERMISSION");
+#endif
+		}
+		break;
+
+	case RG_PERM_UID_PASS:
+		PERM_TYPE = 1 ;					
+		temp_addr[0] = ADDR_UID_PW_CNT[0];
+		temp_addr[1] = ADDR_UID_PW_CNT[1];		
+		if( (rx_data[0] & PERM_TYPE) == 0)
+		{
+			result = 0;
+#if TEST_COUNT_ON			
+			PRINTLOG("\r\nMISS TO GET UID_PERMISSION");
+#endif
+		}
+		else
+		{
+#if TEST_COUNT_ON
+			PRINTLOG("\r\nHIT TO GET UID_PERMISSION");
+#endif
+		}
+		break;
+
+	default:
+		PRINTLOG("\r\nPERM TYPE ERROR %d",PERM_TYPE);
+		break;
+
+	}
+
+	PRINTLOG("\r\n GetPermResult 0x%02x",rx_data[0]);
+
+
+	inst = 0x20; 	 
+
+	tspi_interface(cs, inst, temp_addr , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);		
+	PRINTLOG("\r\n temp_addr 0x%02x%02x",temp_addr[0],temp_addr[1]);
+	g_ErrorCnt = rx_data[0];
+
+	switch (TYPE) 
+	{
+
+	case RG_PERM_SUPER_PASS:
+		PRINTLOG("\r\n EE_SUPER_PW_CNT");
+		break;
+	case RG_PERM_DETOUR_PASS:
+		PRINTLOG("\r\n EE_DETOUR_PW_CNT");		
+		break;
+	case RG_PERM_DESTORY0_PASS:
+		PRINTLOG("\r\n EE_DESTORY0_PW_CNT");		
+		break;
+	case RG_PERM_DESTORY1_PASS:
+		PRINTLOG("\r\n EE_DESTORY1_PW_CNT");		
+		break;
+	case RG_PERM_EEPROM_PASS:
+		PRINTLOG("\r\n EE_EEPROM_PW_CNT");		
+		break;
+	case RG_PERM_UID_PASS:
+		PRINTLOG("\r\n EE_UID_PW_CNT");		
+		break;
+
+	default:
+		PRINTLOG("\r\nPERM TYPE ERROR %d",PERM_TYPE);
+		break;
+
+	}
+
+	PRINTLOG(" %d",rx_data[0]);
+
+
+
+	switch (TYPE) 
+	{
+
+	case RG_PERM_SUPER_PASS:
+
+		if(rx_data[0] != 0)
+		{
+			result = 0;
+#if TEST_COUNT_ON
+			PRINTLOG("\r\nMISS TO GET SUPER_PERMISSION");
+#endif
+		}
+		else
+		{
+#if TEST_COUNT_ON
+			PRINTLOG("\r\nHIT TO GET SUPER_PERMISSION");
+#endif
+		}
+
+		break;
+	case RG_PERM_DETOUR_PASS:
+		if(rx_data[0] != 0)
+		{
+			result = 0;
+#if TEST_COUNT_ON
+			PRINTLOG("\r\nMISS TO GET DETOUR_PERMISSION");
+#endif
+		}
+		else
+		{
+#if TEST_COUNT_ON
+			PRINTLOG("\r\nHIT TO GET DETOUR_PERMISSION");
+#endif
+		}
+
+		break;
+
+	case RG_PERM_DESTORY0_PASS:
+		if(rx_data[0] != 0)
+		{
+			result = 0;
+#if TEST_COUNT_ON
+			PRINTLOG("\r\nMISS TO GET DESTORY0_PERMISSION");
+#endif
+		}
+		else
+		{
+#if TEST_COUNT_ON
+			PRINTLOG("\r\nHIT TO GET DESTORY0_PERMISSION");
+#endif
+		}
+
+		break;
+
+
+	case RG_PERM_DESTORY1_PASS:
+		if(rx_data[0] != 0)
+		{
+			result = 0;
+#if TEST_COUNT_ON
+			PRINTLOG("\r\nMISS TO GET DESTORY1_PERMISSION");
+#endif
+		}
+		else
+		{
+#if TEST_COUNT_ON
+			PRINTLOG("\r\nHIT TO GET DESTORY1_PERMISSION");
+#endif
+		}
+
+		break;
+
+	case RG_PERM_EEPROM_PASS:
+		if(rx_data[0] != 0)
+		{
+			result = 0;
+#if TEST_COUNT_ON
+			PRINTLOG("\r\nMISS TO GET EEPROM_PERMISSION");
+#endif
+		}
+		else
+		{
+#if TEST_COUNT_ON
+			PRINTLOG("\r\nHIT TO GET EEPROM_PERMISSION");
+#endif
+		}
+
+		break;
+
+	case RG_PERM_UID_PASS:
+
+		if(rx_data[0] != 0)
+		{
+			result = 0;
+#if TEST_COUNT_ON
+			PRINTLOG("\r\nMISSTO GET UID_PERMISSION");
+#endif
+		}
+		else
+		{
+#if TEST_COUNT_ON
+			PRINTLOG("\r\nHIT TO GET UID_PERMISSION");
+#endif
+		}
+
+		break;
+
+	default:
+		PRINTLOG("\r\nPERM TYPE ERROR");
+		break;
+
+	}    
+#if PRINTFMODE_PERMISSION
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");	
+	PRINTLOG("\r\n\n");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+	PRINTLOG("\r\n==       SET RG_ST0_OPMODE AS 0x01                            ==");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+#endif 	
+	tx_data[0] = 0x01;	
+	tspi_interface(cs, ADDR_NOR_W, RG_ST0_OPMODE , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);			
+
+#if PRINTFMODE_PERMISSION
+	PRINTLOG("\r\n\n");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+	PRINTLOG("\r\n==       SET RG_ACCESS AS 0                            ==");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+#endif 	
+	tx_data[0] = 0;	
+	tspi_interface(cs, ADDR_NOR_W, RG_ACCESS , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);			
+	delay_us(5);
+	return result;
+
+}
+
+int GetPermission(int iType, unsigned char *pchPW)
+{
+	unsigned char achCTPW[16];
+	int success = 1;
+	int i;
+	unsigned int inst = 0;
+	//unsigned char addr[2];
+	unsigned char tx_data[64];
+	unsigned char rx_data[64];
+	int j = 0;
+	unsigned char temp_addr[2];
+	int k = 0;
+	AES_KEY aes128_ekey,aes128_dkey;	
+	AES_set_encrypt_key(gAES_KEY_X1, 128, &aes128_ekey);
+	AES_ecb_encrypt(pchPW, achCTPW, &aes128_ekey, AES_ENCRYPT);
+
+	GetPermissionByPW(achCTPW, iType);
+	tspi_interface(cs, ADDR_NOR_R, RG_PERM_GET_CTRL1 , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);
+	printf("\r\n Permission %02x",rx_data[0]);
+
+}
+
+int ReleasePermision()
+{
+	int success = 1;
+	int i;
+	unsigned int inst = 0;
+	//unsigned char addr[2];
+	unsigned char tx_data[64];
+	unsigned char rx_data[64];
+	int j = 0;
+	unsigned char temp_addr[2];
+	int k = 0;
+
+	delay_us(5);
+	endOP();
+	//ReadStatusRegister();
+#if PRINTFMODE_PERMISSION
+	PRINTLOG("\r\n\n");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+	PRINTLOG("\r\n==       SET RG_ST0_OPMODE AS 0x0C                            ==");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+#endif 	
+	tx_data[0] = 0x0C;	
+	tspi_interface(cs, ADDR_NOR_W, RG_ST0_OPMODE , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);			
+
+	//tx_data[0] = 0x0;	
+	//tspi_interface(cs, ADDR_NOR_W, RG_PERM_GET_EE_RD_PRE_SP , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);	
+	//delay_ms(16);
+
+
+#if PRINTFMODE_PERMISSION
+	PRINTLOG("\r\n\n");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+	PRINTLOG("\r\n==       SET RG_PERM_RELEASE AS 0x1                            ==");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+#endif 	
+	tx_data[0] = 0x0;	
+	tspi_interface(cs, ADDR_NOR_W, RG_PERM_RELEASE , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);	
+
+	endOP();
+
+#if PRINTFMODE_PERMISSION
+	PRINTLOG("\r\n\n");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+	PRINTLOG("\r\n==       READ RG_PERM_GET_CTRL1                            ==");
+	PRINTLOG("\r\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+#endif 	
+	delay_us(5);
+	tx_data[0] = 0;	
+	tspi_interface(cs, ADDR_NOR_R, RG_PERM_GET_CTRL1 , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);			
+
+	if(rx_data[0] != 0 )
+	{
+		PRINTLOG("\r\n MISS TO RELEASE PERMISSION 0x%02x", rx_data[0]);
+		success = 0;
+
+	}
+	else
+	{
+		PRINTLOG("\r\n HIT TO RELEASE PERMISSION");
+
+	}
+
+	return success;
+
+}

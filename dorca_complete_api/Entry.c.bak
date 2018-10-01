@@ -1,0 +1,537 @@
+//#define ETRY_CODE
+#ifndef ETRY_CODE
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <netinet/in.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <poll.h>
+#endif
+#include <stdlib.h>
+#include <memory.h>
+#include <stdio.h>
+#include "./function/dorca30_api.h"
+#include "./function/define.h"
+
+#define NETBUF_SIZE 161
+#define ENCBUF_SIZE 160
+#define WHEREAMI() printf("%s %d\n",__FILE__,__LINE__)
+#ifdef OPENSSL_SUPPORT
+#include <openssl/ecdh.h>
+#include <openssl/ec.h>
+#include <openssl/pem.h>
+#endif
+
+#define SYSFS_GPIO_DIR "/sys/class/gpio"
+
+
+
+int fd_19;
+#define MAX_BUF 1024
+#ifndef ETRY_CODE
+#if 1
+#define POWER 12
+#define INT0 6
+#else
+#define POWER 26
+#define INT0 19
+#endif
+void export(int gpio)
+{
+   char buf[MAX_BUF]; 
+   int fd;
+//   printf("export %d\n",gpio); 
+   fd = open("/sys/class/gpio/export", O_WRONLY);
+   sprintf(buf, "%d", gpio); 
+   write(fd, buf, strlen(buf));
+   close(fd);
+}
+
+void unexport(int gpio)
+{
+   char buf[MAX_BUF]; 
+   int fd;
+	
+//	printf("unexport %d\n",gpio);
+	fd = open("/sys/class/gpio/unexport", O_WRONLY);
+   sprintf(buf, "%d", gpio);
+   write(fd, buf, strlen(buf));
+   close(fd);
+}
+
+ void direction(int gpio, int dir)
+{
+   char buf[MAX_BUF]; 
+   int fd;
+
+//	printf("direction %d dir %d\n",gpio,dir);
+   sprintf(buf, "/sys/class/gpio/gpio%d/direction", gpio);
+
+   fd = open(buf, O_WRONLY);
+
+   // Set out direction
+   if(dir == 1)
+	   write(fd, "out", 3); 
+   else// Set in direction
+	   write(fd, "in", 2); 
+	   
+   close(fd);
+}
+
+void read_val(int gpio)
+{
+   char buf[MAX_BUF]; 
+   int fd;
+
+   char value;
+
+ //  printf("read_val %d \n",gpio);
+   sprintf(buf, "/sys/class/gpio/gpio%d/value", gpio);
+
+   fd = open(buf, O_RDONLY);
+
+   read(fd, &value, 1);
+
+   if(value == '0')
+   { 
+		// Current GPIO status low
+   }
+   else
+   {
+		// Current GPIO status high
+   }
+
+   close(fd);
+}
+
+void write_val(int gpio, int val)
+{
+   char buf[MAX_BUF]; 
+   int fd;
+
+//   printf("write_val  gpio %d val %d \n",gpio,val); 
+   sprintf(buf, "/sys/class/gpio/gpio%d/value", gpio);
+   fd = open(buf, O_WRONLY);
+   // Set GPIO high status
+   if(val == 1)
+	   write(fd, "1", 1); 
+   // Set GPIO low status 
+   else
+	   write(fd, "0", 1); 
+
+   close(fd);
+}
+
+
+void PortOpen()
+{
+	char buf[MAX_BUF];
+	//	 printf("write_val	gpio %d val %d \n",gpio,val); 
+	   sprintf(buf, "/sys/class/gpio/gpio%d/value", 6);
+	   fd_19 = open(buf, O_WRONLY);
+	   // Set GPIO high status
+ 
+	
+
+
+}
+#endif
+
+void PrintCntEx(int HitCnt, int MissCnt,int IgnoreCnt, int TotalCnt)
+{
+	printf("\r\n---------------------------------------------");
+	printf("\r\nHIT Cnt : %d   MISS Cnt : %d   IgnoreCnt : %d  TOTAL Cnt : %d",HitCnt,MissCnt,IgnoreCnt,TotalCnt);
+//	gTESTAllCnt++;
+	if(MissCnt == 0)
+		printf("\r\n PASS");
+	else
+		{
+			printf("\r\n FAIL");
+//			gTESTAllErrorCnt++;
+		}
+	printf("\r\n---------------------------------------------");
+}
+
+extern unsigned int cs;
+ int gPrintMode;
+extern int Aes256;
+extern int Aes128;
+extern int Aria256;
+extern int Aria128;
+extern int AesIsFirst;
+unsigned int NumOfIterMain = 1;
+
+#define LOGI(...)	printf(__VA_ARGS__)
+#define LOGE(...)	printf(__VA_ARGS__)
+#define SPI0_SPEED 0
+#define SPI1_SPEED 500*1000
+
+void PowerOn()
+{
+#ifndef ETRY_CODE
+
+	export(POWER);
+	export(INT0); 		
+	export(8);
+	export(7);			
+    export(9);
+    export(10);
+    export(11);
+	
+	printf("export");
+	direction(POWER,1);
+	direction(INT0,1);			
+	direction(8,1); 			
+	direction(7,1); 
+	direction(9,1); 			
+	direction(10,1); 
+	direction(11,1); 
+	printf("\r\n Clear ALL");
+	write_val(POWER,0);
+	write_val(INT0,0);			
+	write_val(7,0); 			
+	write_val(8,0); 			
+	write_val(9,0); 			
+	write_val(10,0); 			
+	write_val(11,0); 			
+	usleep(300*1000);
+	printf("\r\n Power On");
+	write_val(POWER,1);;
+	usleep(300*1000);
+
+	printf("\r\n Clear ALL");
+	write_val(POWER,0);
+	write_val(INT0,0);			
+	write_val(8,0); 			
+	write_val(7,0); 			
+	usleep(300*1000);
+	printf("\r\n Power On");
+	write_val(POWER,1);;
+#endif
+}
+
+void GenINT0()
+{
+#ifndef ETRY_CODE
+	int j = 0;
+	write(fd_19, "1", 1); 
+	write(fd_19, "0", 1);
+
+#endif
+
+}
+
+void GenINT1SEC()
+{
+#ifndef ETRY_CODE
+	int j = 0;
+	write_val(19,1);
+					sleep(1);
+	for(j = 0; j < 1; j++);;
+
+	write_val(19,0);
+#endif
+
+}
+
+
+#define AES_T 1
+#define RSA_T 2
+#define ECDH_T 3
+
+
+typedef struct _Payload
+{
+	int type;
+	unsigned char data[256];
+}Payload;
+#ifdef OPENSSL_SUPPORT
+
+void EnterCM0()
+{
+ 		WRITE_TEST_5();
+		Dorca3_Close();
+		GenINT0();
+		usleep(200*1000);
+		Dorca3_CM0_SPI_Init(SPI1_SPEED);
+}
+void LeaveCM0()
+{
+
+		Dorca3_CM0_Close();
+		Dorca3_SPI_Init(SPI0_SPEED);				
+		GenINT0();
+		SET_SPI0();		
+
+}
+unsigned char temp_buffer_entry[256];
+
+void EcdhTest()
+{
+	int i = 0;
+			{
+		
+		EC_KEY* ecdh1 = EC_KEY_new_method(NULL);
+		if(ecdh1 == NULL) {
+			printf("Can't Get RSA Method");
+			return -1;
+		}
+		
+		//EC_KEY* ecdh2 = EC_KEY_new_method(NULL);
+		//if(ecdh2 == NULL) {
+		//	printf("Can't Get RSA Method");
+		//	return -1;
+		//}
+		
+		EC_GROUP* group1 = EC_GROUP_new_by_curve_name(NID_X9_62_prime256v1);
+		if(group1 == NULL) {
+			printf("Can't Group\n");
+			return -1;
+		}
+		
+		if(EC_KEY_set_group(ecdh1, group1) == 0) {
+			printf("Can't set Group\n");
+			return -1;
+		}
+		
+		if(EC_KEY_generate_key(ecdh1) == 0) {
+			printf("Can't Gen Private Key\n");
+			return -1;
+		}
+		
+		const EC_POINT* pub_key1 = EC_KEY_get0_public_key(ecdh1);
+		if(pub_key1 == NULL) {
+			printf("Can't get public Key\n");
+			return -1;
+		}
+		
+		//EC_GROUP* group2 = EC_GROUP_new_by_curve_name(NID_X9_62_prime256v1);
+		//if(group2 == NULL) {
+		//	printf("Can't Group\n");
+		//	return -1;
+		//}
+		
+		//if(EC_KEY_set_group(ecdh2, group2) == 0) {
+		//	printf("Can't set Group\n");
+		//	return -1;
+		//}
+		
+		//if(EC_KEY_generate_key(ecdh2) == 0) {
+		//	printf("Can't Gen Private Key\n");
+		//	return -1;
+		//}
+		
+		//const EC_POINT* pub_key2 = EC_KEY_get0_public_key(ecdh2);
+		//if(pub_key2 == NULL) {
+		//	printf("Can't get public Key\n");
+		//	return -1;
+		//}
+		point pMyPublc;
+		int iLen;
+		uint8_t sk[32];
+		uint8_t common_key[32];	
+		unsigned char NumX[32];
+		unsigned char NumY[32];		
+		size_t  key_length;
+		point p1;
+		point p2;
+		printf("\r\n TEST ecdh_gen_pub_key");
+		hexstr2bytes("c64d654e263cda95d6dc719d3cfd6c3b932b1fea6021b9e2ac36995c4d96ae3d",sk);
+
+		EnterCM0();
+		ecdh_gen_pub_key(sk,&p1);
+		LeaveCM0();
+		printf("\r\nGet_ECDH_PublicKey_X\r\n");
+		printbyte(p1.x,32);
+		
+		printf("\r\n Expected ECDH_PublicKey_X\r\n");
+		printf("\r\nefb50f68f26558c1d42847e82dc552607965049cc6f65d7ed8b8d02a1d8825f9");
+		hexstr2bytes("efb50f68f26558c1d42847e82dc552607965049cc6f65d7ed8b8d02a1d8825f9",temp_buffer_entry);
+		if(memcmp(p1.x,temp_buffer_entry,32) == 0)
+			printf("\r\n PASS");
+		else
+			printf("\r\n FAIL");
+		
+		printf("\r\nGet_ECDH_PublicKey_Y\r\n");
+		printbyte(p1.y,32);
+		
+		printf("\r\n Expected ECDH_PublicKey_Y\r\n");
+		printf("\r\n3ca531980f67c4843db00419470860d736577867c5eab3e3ed304fd253949202");
+
+		hexstr2bytes("3ca531980f67c4843db00419470860d736577867c5eab3e3ed304fd253949202",temp_buffer_entry);
+
+		if(memcmp(p1.y,temp_buffer_entry,32) == 0)
+			printf("\r\n PASS");
+		else
+			printf("\r\n FAIL");	
+
+
+		BIGNUM *x = BN_new();
+		BIGNUM *y = BN_new();
+		BN_bin2bn(p1.x,32,x);
+		BN_bin2bn(p1.y,32,y);
+	
+		 EC_POINT* ec_point_public2 = EC_POINT_new(EC_GROUP_new_by_curve_name(NID_X9_62_prime256v1));
+		if(NULL == ec_point_public2)
+			printf("\n error ec_point");
+
+		if(!EC_POINT_set_affine_coordinates_GFp(EC_GROUP_new_by_curve_name(NID_X9_62_prime256v1), ec_point_public2,x, y,NULL) )
+			printf("\n EC_POINT_ERROR");
+		else
+			printf("\n EC_POINT_SUCCESS");
+
+		
+		//return;
+				
+		
+		uint8_t session_key1[32];
+		uint8_t session_key2[32];
+		if(ECDH_compute_key(session_key1, 32, ec_point_public2, ecdh1, NULL) == 0) {
+			printf("Can't Compute Key\n");
+			return -1;
+		}
+/*      check whether ECDH work or not 		
+		if(memcmp(session_key1, session_key2, 32)) {
+			for( i = 0; i < 10; i++)			
+			printf("Decryption Fail\n");
+			//return -1;
+		}
+		else {
+			for( i = 0; i < 10; i++)
+			printf("PASS Compute KEY Complete\n");
+			printbyte(session_key1,32);
+		}		
+*/
+
+		BIGNUM *x2 = BN_new();
+    	BIGNUM *y2 = BN_new();
+
+    if (EC_POINT_get_affine_coordinates_GFp(EC_GROUP_new_by_curve_name(NID_X9_62_prime256v1), pub_key1, x2, y2, NULL)) {
+        BN_print_fp(stdout, x2);
+        putc('\n', stdout);
+        BN_print_fp(stdout, y2);
+        putc('\n', stdout);
+    	}
+
+		
+		BN_bn2bin(x2, p2.x);
+		BN_bn2bin(y2, p2.y);
+
+		EnterCM0();
+		ecdh_gen_session_key(sk,&p2,session_key2,&iLen);
+		LeaveCM0();		
+
+
+		///if(ECDH_compute_key(session_key2, 32, pub_key1, ecdh2, NULL) == 0) {
+		//	printf("Can't Compute Key\n");
+		///	return -1;
+		///}
+		
+		//session_key2[0] = session_key2[1] = 0;
+		if(memcmp(session_key1, session_key2, 32)) {
+			for( i = 0; i < 10; i++)			
+			printf("Decryption Fail\n");
+			return -1;
+		}
+		else {
+			for( i = 0; i < 10; i++)
+			printf("PASS Compute KEY Complete\n");
+			printbyte(session_key1,32);
+		}
+		//ENGINE_finish(eng);
+		//ENGINE_free(eng);
+		//ENGINE_cleanup();
+		
+		printf("Complete\n");
+		}
+		return;
+
+}
+#endif
+extern int SPEED;
+
+int main(void)
+{
+	int i;
+	int j;
+	unsigned char temp ;
+	unsigned char crc[2];
+	int HitCnt,MissCnt,IgnoreCnt;
+#ifndef ETRY_CODE		
+	PowerOn();
+	PortOpen();
+	Dorca3_SPI_Init(SPEED);
+#endif
+	printf("\r\n WAKE UP DORCA !!!!");
+	Delay_us(1);
+	Delay_ms(100);
+	delay_ms(10);
+	//OKA_COMMON_KEY_PRINT();
+
+
+#ifndef ETRY_CODE
+	SET_SPI0();
+#endif
+	wake_up();
+    printf("\r\n ****************  CALLING WAKE UP ******************");
+//	SHA_TEST_MAIN();
+//	return;
+//	printf("test interver start");
+//	delay_ms(5000);
+//	printf("test interver end");
+	
+	while(1)
+	{
+L_START:   
+		temp = 'z' ;
+
+		printf("\r\n\n");
+		printf("\r\n  *****************************************************");
+		printf("\r\n  *                 TEST MAIN                         *");
+		printf("\r\n  *****************************************************");
+		printf("\r\n  * number of iteration     %d                            *",NumOfIterMain );	
+		printf("\r\n  -----------------------------------------------------");
+		printf("\r\n  * s. SPI SPEED SET                                  *");	
+		printf("\r\n  * q. Enter CM0 MODE                                 *");		
+		printf("\r\n  * a. API TEST MODE                                 *");		
+#ifdef CODE_DOWNLOAD		
+		printf("\r\n  * F. code download to cm0                                 *");				
+#endif
+		//		printf("\r\n  * y. RSSHARead  :  ");					
+		//		printf("\r\n  * t. RSCreate  :  ");					
+		//		printf("\r\n  * 1. RSDir READ                         *");
+		printf("\r\n  * Select : ");
+		MissCnt = 0;
+		HitCnt = 0;
+		IgnoreCnt = 0;
+		while(temp == 'z')
+		{
+			temp = _uart_get_char();
+			if(temp == 0x0d)
+				goto L_START;
+			printf("\r\n input%02x\n", temp);
+			if ( temp != 'z' ) printf("%c\n", temp);
+			printf("\r\n");
+
+			switch ( temp )
+			{
+				case 's' : SPI_SPEED_SET(); break;
+				case 'a': API_TEST_MAIN();break;
+#ifdef CODE_DOWNLOAD				
+				case 'F': TestCM0Code();break;
+#endif				
+				case 'q' : 
+				WRITE_TEST_5();
+				break;
+			}
+		}
+	}
+	
+
+	printf("\n\nFinished the Test\n");
+
+	return 0;
+}

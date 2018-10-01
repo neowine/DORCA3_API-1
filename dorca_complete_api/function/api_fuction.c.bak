@@ -1,0 +1,172 @@
+#include "dorca30_api.h"
+#include "dorca30_api_inside.h"
+#include <stdlib.h>
+#if 1
+int dorca3_cipher_decipher(int mode, int arg_type, unsigned char* Key, int key_length, unsigned char *iv, unsigned char *out, unsigned char *in, size_t len, int type,int last)
+{
+	int dorca3_opmode = 0;
+	int dorca3_enc_dec = 0;
+	int dorca3_keylength = 0;
+	int dorca3_aes_aria = 0;
+	int dorca3_two_frame = 0;
+	if(32 == len)
+	  dorca3_two_frame = 1;
+	  
+	dorca3_opmode = type;
+	dorca3_enc_dec = mode;
+	if( 1 == arg_type)
+		dorca3_aes_aria = RG_AES;
+	else
+		dorca3_aes_aria = RG_ARIA;
+	if(32 == key_length)
+		dorca3_keylength = RG_256;
+	else
+		dorca3_keylength = RG_128;
+	
+	#ifdef DEBUG_API
+		printf("\r\n mode %d",mode);
+		printf("\r\n arg_type %d",arg_type);
+		if(NULL != Key) {
+			printf("\r\n Key");
+			printbyte(Key,key_length);
+		}
+		if(NULL != iv){
+			printf("\r\n iv");
+			printbyte(iv,16);
+		}
+		printf("\r\n in");
+		printbyte(in,16);
+		printf("\r\n len %d", len);
+		printf("\r\n type %d", type);
+		printf("\r\n last %d", last);
+		
+		
+	#endif
+	if(NULL != Key) {
+			if(MODE_ECB == type) {	
+				AES_ARIA_INIT(dorca3_keylength,dorca3_aes_aria,Key,dorca3_two_frame);
+			} 
+			else{
+				if(NULL != iv)
+					SET_IV(iv,dorca3_opmode,dorca3_keylength,dorca3_aes_aria,Key,dorca3_two_frame);
+			}		
+	}
+	else {
+		if(NULL != iv)	
+				SET_IV(iv,dorca3_opmode,dorca3_keylength,dorca3_aes_aria,Key,dorca3_two_frame);
+	}
+	
+	if(16 == len) {
+		if( RG_ENC == dorca3_enc_dec)
+			AES_ARIA_Encrypt(in,out);
+		else
+			AES_ARIA_Decrypt(in,out);	
+	}
+	
+	else {
+		if( RG_ENC == dorca3_enc_dec)
+			AES_ARIA_Encrypt32(in,out);
+		else
+			AES_ARIA_Decrypt32(in,out);	
+
+	}
+
+	
+	if(last){
+
+		AES_ARIA_CLOSE();
+		
+		if(32 == len){
+			Reset();
+
+		}
+	}
+
+}
+#endif  
+int dorca3_cipher_decipher_given_idx(int key_idx, int mode, int arg_type, unsigned char* Key, int key_length, unsigned char *iv, unsigned char *out, unsigned char *in, size_t len, int type,int last)
+{
+	int dorca3_opmode = 0;
+	int dorca3_enc_dec = 0;
+	int dorca3_keylength = 0;
+	int dorca3_aes_aria = 0;
+	int dorca3_two_frame = 0;
+	if(32 == len)
+	  dorca3_two_frame = 1;
+	  
+	dorca3_opmode = type;
+	dorca3_enc_dec = mode;
+	if( 1 == arg_type)
+		dorca3_aes_aria = RG_AES;
+	else
+		dorca3_aes_aria = RG_ARIA;
+	if(32 == key_length)
+		dorca3_keylength = RG_256;
+	else
+		dorca3_keylength = RG_128;
+	
+	#ifdef DEBUG_API
+		printf("\r\n mode %d",mode);
+		printf("\r\n arg_type %d",arg_type);
+		if(NULL != Key) {
+			printf("\r\n Key");
+			printbyte(Key,key_length);
+		}
+		if(NULL != iv){
+			printf("\r\n iv");
+			printbyte(iv,16);
+		}
+		printf("\r\n in");
+		printbyte(in,16);
+		printf("\r\n len %d", len);
+		printf("\r\n type %d", type);
+		printf("\r\n last %d", last);		
+	#endif
+	
+	if(key_idx > -1 ) {
+
+		if(MODE_ECB == type) {	
+			AES_ARIA_INIT_KEY_IDX(key_idx,dorca3_keylength,dorca3_aes_aria,Key,dorca3_two_frame);
+		} 
+		else{
+			if(NULL != iv)
+				SET_IV_KEY_IDX(key_idx,iv,dorca3_opmode,dorca3_keylength,dorca3_aes_aria,Key,dorca3_two_frame);
+		}		
+			
+	}
+		
+	if(16 == len) {
+		if( RG_ENC == dorca3_enc_dec)
+			AES_ARIA_Encrypt(in,out);
+		else
+			AES_ARIA_Decrypt(in,out);	
+	}
+	
+	else {
+		if( RG_ENC == dorca3_enc_dec)
+			AES_ARIA_Encrypt32(in,out);
+		else
+			AES_ARIA_Decrypt32(in,out);	
+
+	}
+
+	
+	if(last){
+
+		AES_ARIA_CLOSE();
+		
+		if(32 == len){
+			Reset();
+
+		}
+	}
+	
+	else {
+
+	}
+		
+
+}
+
+
+

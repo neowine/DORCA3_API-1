@@ -1,0 +1,244 @@
+#include <stdio.h>
+
+#include "dorca30_api.h"
+#include "dorca30_function.h"
+#include "dorca30_api_inside.h"
+#include "./include/aes.h"
+#include "global.h"
+
+extern int cs;
+void CommonDecEncWirteRead(unsigned char PageInfo, int AES_CTRL)
+{	
+
+	int i;
+	int j;
+	unsigned int inst = 0;
+	int pass = 1;
+	//unsigned char addr[2];
+	unsigned char tx_data[64];
+	unsigned char rx_data[64];
+	unsigned char temp ;
+	unsigned char buf_data[64];
+	unsigned char data[32];
+	memset(data,0xaa,32);
+	//PRINTLOG("\r\n 1. KEY SETTING");
+	//if(eep_page_write(0xE9,0x00,data,1) )
+	//	PRINTLOG(" PASS");
+	//eep_page_read(0xE9, 0x00,0,NULL);	
+	//eep_page_read(0xF1, 0x00,0,NULL);
+
+	tx_data[0] = 0x00;// AES_x0 KEY
+	tspi_interface(cs, ADDR_NOR_W,  RG_EE_KEY_AES_CTRL      , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);
+
+	//tx_data[0] = 0x01;//AES_256
+	//printf("\r\n AES CTRL %d",AES_CTRL);
+	tx_data[0] =  AES_CTRL;
+	tspi_interface(cs, ADDR_NOR_W,  RG_AES_CTRL       , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);
+
+	tx_data[0] = 0x9;//SYMCIP MODE
+	tspi_interface(cs, ADDR_NOR_W, RG_ST0_OPMODE    , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);
+
+	tx_data[0] = 0x4;//AESEncWrite Mode
+	tspi_interface(cs, ADDR_NOR_W, RG_ST1_SYMCIP_OPMODE   , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);
+
+	tx_data[0] = PageInfo;//USER_ZONE_M01
+	tspi_interface(cs, ADDR_NOR_W, RG_EE_USER_ZONE_SEL    , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);
+
+	tx_data[0] = 3;// AES_KEY_SET
+	tspi_interface(cs, ADDR_NOR_W, RG_ST2_SYMCIP_OPMODE     , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);
+	delay_us(30);
+
+	tx_data[0] = 1;//STAND BLYE
+	tspi_interface(cs, ADDR_NOR_W, RG_ST2_SYMCIP_OPMODE      , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);
+	return;
+
+}
+
+void EncodeAndRead(int SubFrame,int SubPage,int Page, int Algorithm,unsigned char *CT)
+{
+ 
+	unsigned char tx_data[64];
+	unsigned char rx_data[64];
+	unsigned char keybuffer[32];
+	int i,j;  
+	CommonDecEncWirteRead(  (SubFrame << 6) | (SubPage <<4 )  | Page,Algorithm);
+
+	tx_data[0] = 0xF;
+	tspi_interface(cs, ADDR_NOR_W, RG_ST2_SYMCIP_OPMODE      , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);
+	delay_us(30);
+
+	//tspi_interface(cs, ADDR_NOR_R, RG_EEBUF320      , NULL, NULL, NULL, NULL, tx_data, rx_data, 16);
+	tspi_interface(cs, ADDR_NOR_R, RG_EEBUF300      , NULL, NULL, NULL, NULL, tx_data, rx_data, 64);
+
+
+	tspi_interface(cs, ADDR_NOR_R, RG_EEBUF320      , NULL, NULL, NULL, NULL, tx_data, rx_data, 16);
+	j = 15;
+	for( i = 0; i < 16; i++)
+		CT[i] = rx_data[j--];
+
+	tx_data[0] = 0x1;
+	tspi_interface(cs, ADDR_NOR_W, RG_ST2_SYMCIP_OPMODE      , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);
+	//delay_ms(9);
+	tx_data[0] = 0x1;
+	tspi_interface(cs, ADDR_NOR_W, RG_ST1_SYMCIP_OPMODE      , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);
+	//delay_ms(9);
+	endOP();	
+	return;
+}
+
+void DecodeAndWrite(unsigned char *Key, int SubFrame,int SubPage,int Page, int Algorithm,unsigned char *CT)
+{
+	unsigned char tx_data[64];
+	unsigned char rx_data[64];
+	unsigned char keybuffer[32];
+	int i,j;
+	if(Algorithm == AES256 || Algorithm == ARIA256){
+		memcpy(keybuffer,Key+16,16);
+		memcpy(keybuffer+16,Key,16);
+	}
+	else
+		memcpy(keybuffer,Key+16,16);
+
+	KEY_SET(keybuffer);
+	CommonDecEncWirteRead(  (SubFrame << 6) | (SubPage <<4 )  | Page , Algorithm);//AES_256);
+	tx_data[0] = 0xE;
+	tspi_interface(cs, ADDR_NOR_W, RG_ST2_SYMCIP_OPMODE      , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);
+
+	reversebuffer(tx_data, CT, 16);
+
+	//printf("\r\n CT \r\n");
+	//printbyte(CT,16);
+	tspi_interface(cs, ADDR_NOR_W, RG_EEBUF400      , NULL, NULL, NULL, NULL, tx_data, rx_data, 16);
+
+	delay_ms(9);
+
+
+
+	tx_data[0] = 0x1;
+	tspi_interface(cs, ADDR_NOR_W, RG_ST2_SYMCIP_OPMODE      , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);
+	//delay_ms(9);
+	tx_data[0] = 0x1;
+	tspi_interface(cs, ADDR_NOR_W, RG_ST1_SYMCIP_OPMODE      , NULL, NULL, NULL, NULL, tx_data, rx_data, 1);
+	//delay_ms(9);
+	endOP();
+	return;
+}
+
+void CipherMemTest()
+{
+	
+
+	int j;
+	unsigned int inst = 0;
+	unsigned char tx_data[64];
+	unsigned char rx_data[64];
+	unsigned char addr[2];
+	unsigned char buf_cipher[64];
+	unsigned char buf_result[64];
+	unsigned char buf_orginal[64];
+	unsigned char law_data[64];	
+	unsigned char Key[32];
+	unsigned char CIPHERED_KEY[32];
+	int TestSize =0;
+	int success = 1;
+	int iResult = 0;
+	int HitCnt = 0;
+	int MissCnt = 0;
+	unsigned char temp;
+	int i = 0;
+	L_KEYLOAD_START:
+	while(1)
+	{
+		temp = 'z' ;
+		printf("\r\n");
+		printf("\r\n  *****************************************************");
+		printf("\r\n  *            CipherMemTest                                                 *");
+		printf("\r\n  *****************************************************");
+		printf("\r\n  * number of iteration    ");	
+		printf("\r\n  * 0.DecodeAndWrite EncodeAndRead ");	
+		
+
+		printf("\r\n");
+		printf("\r\n  * Select : ");
+
+		while(temp == 'z')
+		{
+			temp = _uart_get_char();
+
+			if ( temp != 'z' ) printf("%c\n", temp);
+			printf("\r\n");
+
+			if(temp == 0x0d)
+				goto L_KEYLOAD_START;
+			if(temp == 'm')
+			{
+				printf("\r\nm is pressed");
+
+				return;
+			}
+			MissCnt = 0;
+			HitCnt = 0;
+			switch ( temp )
+			{
+			case '0' :
+				{
+				for(i = 0; i < 32; i++)
+					Key[i] = i;
+				for(i = 0; i <64; i++)
+					law_data[i] = i;
+				
+				
+				AES_KEY aes256_ekey,aes256_dkey;
+				printf("\r\n  * 0. Set DecodeAndWrite  ");							
+				AES_set_encrypt_key(Key, 256, &aes256_ekey);
+				AES_set_decrypt_key(Key, 256, &aes256_dkey);
+
+				for( i= 0; i < 16; i += 16)
+					AES_ecb_encrypt(&law_data[i], &buf_cipher[i], &aes256_ekey, AES_ENCRYPT);
+
+				DecodeAndWrite(Key, 0,0,1,AES256,buf_cipher);
+				EncodeAndRead( 0,0,1,AES256,buf_result);
+				
+				AES_ecb_encrypt(buf_result, buf_orginal, &aes256_dkey, AES_DECRYPT);	
+				if( 0 == memcmp(buf_orginal,	law_data,16)	)
+					printf("Test PASS");
+				}
+				break;
+			case '1' :			
+				{
+				for(i = 0; i < 32; i++)
+					Key[i] = i;
+				for(i = 0; i <64; i++)
+					law_data[i] = i;
+								
+				AES_KEY aes256_ekey,aes256_dkey;
+				printf("\r\n  * 0. Set EncodeAndRead  ");							
+				AES_set_encrypt_key(Key, 256, &aes256_ekey);
+				AES_set_decrypt_key(Key, 256, &aes256_dkey);
+
+				for( i= 0; i < 16; i += 16)
+					AES_ecb_encrypt(&law_data[i], &buf_cipher[i], &aes256_ekey, AES_ENCRYPT);
+
+				EncodeAndRead( 0,0,1,AES256,buf_result);
+				printf("\r\n buf_cipher");
+				printbyte(buf_cipher,16);
+				printf("\r\n buf_result");
+				printbyte(buf_result,16);				
+				if(memcmp(buf_cipher,buf_result,16) == 0)
+					printf("\r\n PASS");
+				else
+					printf("\r\n FAIL");
+				break;
+
+			default :
+				//					temp = 'p'; break;
+				break;
+				}
+			}
+
+		}
+
+	}
+	return;
+
+}
