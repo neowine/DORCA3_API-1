@@ -9,7 +9,7 @@ and speed. These characteristics have hade the DORCA-10 and 20 series popular am
 
 Source Code:
 
-The source coe for DORCA3_API is available at https://github.com/neowinepub/DORCA3_API. 
+The source code for DORCA3_API is available at https://github.com/neowinepub/DORCA3_API. 
 You can clone this repository with the command 'git clone'.
 
 Issues:
