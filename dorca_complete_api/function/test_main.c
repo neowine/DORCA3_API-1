@@ -11,7 +11,7 @@
 #define SPI0_SPEED 0
 #define SPI1_SPEED 500*1000
 #define TWO_LEN 64
-
+ 
 extern int cs;
 int SPEED = 0;
 
@@ -23,9 +23,7 @@ unsigned char gAES_KEY_SEED[32]={0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x
 
 
 unsigned char gSUPER_PW_PT[16];
-unsigned char gDETOUR_PW_PT[16];
-unsigned char gDESTROY0_PW_PT[16];
-unsigned char gDESTROY1_PW_PT[16];
+
 unsigned char gEEPROM_PW_PT[16];
 unsigned char gUID_PW_PT[16];//cc			
 void PWWrite()
@@ -34,9 +32,7 @@ void PWWrite()
 	for(i = 0; i < 16;i++)
 	{
 		gSUPER_PW_PT[i] = 0x77; //77
-		gDETOUR_PW_PT[i] = 0x88; //88
-		gDESTROY0_PW_PT[i] = 0x99;//99	
-		gDESTROY1_PW_PT[i] = 0xaa;//aa
+
 		gEEPROM_PW_PT[i] = 0xbb;//bb
 		gUID_PW_PT[i] = 0xcc;//cc 	
 	}
@@ -58,7 +54,6 @@ void GetPermissionMenu()
 	printf("\r\n  * 3. DESTROY1_PW_PT					  		");			
 	printf("\r\n  * 4. EEPROM_PW_PT						");			
 	printf("\r\n  * 5. UID_PW_PT						");						
-	printf("\r\n  * 6. DETOUR_PW_PT						");							
 	printf("\r\n  * 7. Release Permission						");								
 		
 	/*
@@ -89,16 +84,6 @@ void GetPermissionMenu()
 					PrintByte(gSUPER_PW_PT,16);
 					GetPermission(RG_PERM_SUPER_PASS,gSUPER_PW_PT,KEY_INDEX);
 					break;
-				case '2':
-					printf("\r\n 					GetPermission(RG_PERM_DESTORY0_PASS,DESTROY0_PW_PT);");					
-					PrintByte(gDESTROY0_PW_PT,16);
-					GetPermission(RG_PERM_DESTORY0_PASS,gDESTROY0_PW_PT,KEY_INDEX);
-					break;
-				case '3':
-					PrintByte(gDESTROY1_PW_PT,16);					
-					printf("\r\n 					GetPermission(RG_PERM_DESTORY1_PASS,DESTROY1_PW_PT);");					
-					GetPermission(RG_PERM_DESTORY1_PASS,gDESTROY1_PW_PT,KEY_INDEX);
-					break;
 				case '4':
 					PrintByte(gEEPROM_PW_PT,16);					
 					printf("\r\n 					GetPermission(RG_PERM_EEPROM_PASS,EEPROM_PW_PT);");					
@@ -109,11 +94,6 @@ void GetPermissionMenu()
 					printf("\r\n 					GetPermission(RG_PERM_UID_PASS,UID_PW_PT);");					
 					GetPermission(RG_PERM_UID_PASS,gUID_PW_PT,KEY_INDEX);
 					break;				
-				case '6':
-					PrintByte(gDETOUR_PW_PT,16);											
-					printf("\r\n 					GetPermission(RG_PERM_DETOUR_PASS,DETOUR_PW_PT);");					
-					GetPermission(RG_PERM_DETOUR_PASS,gDETOUR_PW_PT,KEY_INDEX);
-					break;
 				case '7':
 						printf("\r\n  * 7. Release Permission						");								
 						ReleasePermision();
@@ -2983,6 +2963,7 @@ void API_TEST_MAIN()
 			printf("\r\n* o. test CFG Area 							");						
 			printf("\r\n* t. make random seed key 							");									
 			printf("\r\n* m. return to top menu							");			
+			printf("\r\n* q. sha auth							");						
 
 			
 			printf("\r\n");
@@ -3006,6 +2987,10 @@ void API_TEST_MAIN()
 	
 				switch ( temp )
 				{
+					case 'q':
+						SHAAUTH_FROM_DORCA();
+						SHAAUTH_FROM_MCU();
+						break;					
 					case 'j':
 						KeyMakeTest();
 						break;

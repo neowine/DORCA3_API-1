@@ -75,7 +75,7 @@ int GetPermission(int iType, unsigned char *pchPW, int index);
 int ReleasePermision();
 void SetConifgArea(int permType,int CfgName,unsigned char *pPW_PT, unsigned char *pBuffer, int length);
 void GetConfigArea(int permType,int CfgName,unsigned char *pPW_PT, unsigned char *pBuffer, int length);
-
+int SHAAUTH_FROM_DORCA();
 
 //#define DEBUG_API
 
