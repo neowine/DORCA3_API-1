@@ -1,6 +1,11 @@
 #include <stdio.h>
 #include <string.h> 
 #include <stdlib.h>
+ #include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
 #include "dorca30_api.h"
 #include "dorca30_api_inside.h"
 #include "dorca30_function.h"
@@ -11,7 +16,10 @@
 #define SPI0_SPEED 0
 #define SPI1_SPEED 500*1000
 #define TWO_LEN 64
- 
+#define SPI_0 0
+#define SPI_1 1
+int gSPI_MODE = 0;
+
 extern int cs;
 int SPEED = 0;
 
@@ -2704,6 +2712,149 @@ void TestEcdhSession(void)
 
 return;	
 }
+#define  BUFF_SIZE   1024
+
+void HandShake() 
+{
+
+	unsigned char  sk[32];
+	unsigned char  common_key[32];	
+	unsigned char  temp_buffer[32];
+	size_t  key_length;
+	point p1;
+	int   client_socket;
+	int i  = 0;
+	struct sockaddr_in	 server_addr;
+	
+	char   buff[BUFF_SIZE+5];
+	
+	
+
+
+	client_socket  = socket( PF_INET, SOCK_STREAM, 0);
+
+
+	if( -1 == client_socket)
+	{
+	   printf( "socket 생성 실패\n");
+	   exit( 1);
+	}
+	
+	memset( &server_addr, 0, sizeof( server_addr));
+	server_addr.sin_family	   = AF_INET;
+	server_addr.sin_port	   = htons( 4100);
+	server_addr.sin_addr.s_addr= inet_addr( "192.168.0.9");
+	
+	if( -1 == connect( client_socket, (struct sockaddr*)&server_addr, sizeof( server_addr) ) )
+	{
+	   printf( "접속 실패\n");
+	   exit( 1);
+	}
+
+
+	
+	printf("\r\n TEST EcdhGenPubKey");
+	//Hexstr2Bytes("c64d654e263cda95d6dc719d3cfd6c3b932b1fea6021b9e2ac36995c4d96ae3d",sk);
+	//for(i = 0; i < 32; i++)
+	//	sk[i] = rand()&0xFF;
+	SetSPIMode(SPI_0);
+	GetRandomNumber(sk);
+	GetRandomNumber(&sk[16]);	
+	SetSPIMode(SPI_1);
+	EcdhGenPubKey(sk,&p1);
+	printf("\r\nGet_ECDH_PublicKey_X\r\n");
+	PrintByte(p1.x,32);
+
+	printf("\r\n Expected ECDH_PublicKey_X\r\n");
+	printf("\r\nefb50f68f26558c1d42847e82dc552607965049cc6f65d7ed8b8d02a1d8825f9");
+	Hexstr2Bytes("efb50f68f26558c1d42847e82dc552607965049cc6f65d7ed8b8d02a1d8825f9",temp_buffer);
+	if(memcmp(p1.x,temp_buffer,32) == 0)
+		printf("\r\n PASS");
+	else
+		printf("\r\n FAIL");
+	
+	write(client_socket, p1.x, 32);
+	write(client_socket, p1.y, 32);	
+
+
+	read(client_socket, p1.x, 32);
+	read(client_socket, p1.y, 32);	
+	close(client_socket);
+	printf("\r\n TEST _EcdhGenSessionKey");
+	
+	//Hexstr2Bytes("fb526fbfae10d2a0d8fab4d4bdcc883bbfadee2a73ea66a1a1fe816c282d2ce9",p1.y);
+	//Hexstr2Bytes("764ea0ef1a596b196e8b7316e60de4edccbae87821e767b50f6f36656e7ebe2a",p1.x);
+	key_length = 32;
+	EcdhGenSessionKey(sk,&p1,common_key,&key_length);
+    printf("\r\n Session Key X");
+	printbyte(common_key,32);
+
+	
+}
+
+void HandShakeOnly()
+{
+	
+		int sockfd;
+		int len;
+		struct sockaddr_in address;
+		int result;
+		char ch = 'A';
+		point p1;
+		size_t	key_length;
+
+
+			unsigned char  sk[32];
+	unsigned char  common_key[32];	
+	unsigned char  temp_buffer[32];
+	/*	Create a socket for the client.  */
+	
+		sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	
+	/*	Name the socket, as agreed with the server.  */
+	
+		address.sin_family = AF_INET;
+		address.sin_addr.s_addr = inet_addr("192.168.0.9");
+		address.sin_port = htons(9734);
+		len = sizeof(address);
+	
+	/*	Now connect our socket to the server's socket.	*/
+	
+		result = connect(sockfd, (struct sockaddr *)&address, len);
+	
+		if(result == -1) {
+			perror("oops: client3");
+			exit(1);
+		}
+		printf("\r\n TEST EcdhGenPubKey");
+	Hexstr2Bytes("c64d654e263cda95d6dc719d3cfd6c3b932b1fea6021b9e2ac36995c4d96ae3d",sk);
+	EcdhGenPubKey(sk,&p1);
+	printf("\r\nGet_ECDH_PublicKey_X\r\n");
+	PrintByte(p1.x,32);
+
+	printf("\r\n Expected ECDH_PublicKey_X\r\n");
+	printf("\r\nefb50f68f26558c1d42847e82dc552607965049cc6f65d7ed8b8d02a1d8825f9");
+	Hexstr2Bytes("efb50f68f26558c1d42847e82dc552607965049cc6f65d7ed8b8d02a1d8825f9",temp_buffer);
+	if(memcmp(p1.x,temp_buffer,32) == 0)
+		printf("\r\n PASS");
+	else
+		printf("\r\n FAIL");
+	/*	We can now read/write via sockfd.  */
+	
+		write(sockfd, &ch, 1);
+		read(sockfd, &ch, 1);
+		printf("char from server = %c\n", ch);
+		close(sockfd);
+	Hexstr2Bytes("fb526fbfae10d2a0d8fab4d4bdcc883bbfadee2a73ea66a1a1fe816c282d2ce9",p1.y);
+	Hexstr2Bytes("764ea0ef1a596b196e8b7316e60de4edccbae87821e767b50f6f36656e7ebe2a",p1.x);
+	key_length = 32;
+	EcdhGenSessionKey(sk,&p1,common_key,&key_length);
+    printf("\r\n Session Key X");
+	printbyte(common_key,32);		
+		exit(0);
+
+}
+
 void TestEcdhSessionPuf()
 {
 	unsigned char  sk[32];
@@ -2816,9 +2967,7 @@ void ShaBasic()
 		printf("SHA TEST FAIL");
 return;		
 }
-int gSPI_MODE = 0;
-#define SPI_0 0
-#define SPI_1 1
+
 void SetSPIMode(int SPI_MODE)
 {
 	if(gSPI_MODE != SPI_MODE)
@@ -2964,7 +3113,8 @@ void API_TEST_MAIN()
 			printf("\r\n* t. make random seed key 							");									
 			printf("\r\n* m. return to top menu							");			
 			printf("\r\n* q. sha auth							");						
-
+			printf("\r\n* A. hand shake");
+			printf("\r\n* B. hand shake only");			
 			
 			printf("\r\n");
 			printf("\r\n");
@@ -2987,6 +3137,14 @@ void API_TEST_MAIN()
 	
 				switch ( temp )
 				{
+					case 'B':
+						SetSPIMode(SPI_1);
+						HandShakeOnly();
+						break;				
+					case 'A':
+						SetSPIMode(SPI_1);
+						HandShake();
+						break;
 					case 'q':
 						SHAAUTH_FROM_DORCA();
 						SHAAUTH_FROM_MCU();
